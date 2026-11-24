@@ -88,7 +88,9 @@ window.Game = window.Game || { state: null };
   // ---- 出生前提示：垃圾还没进入屏幕时，在其落点 x 的顶部画一个下指箭头 ----
   // 窗口 = 瓦片进入屏幕前 1.5 秒；越接近出现时刻越亮，瓦片露头后箭头消失（交给瓦片本身）。
   // 注：本应属于 render.js（乙），组装期临时放在 main.js，待乙重构时挪入。
-  const HINT = { pre: 1.5, y: 26, half: 9 };
+  // 竖屏全屏舞台时由 Game.ui.applyStageLayout 写入 Game.render.HINT（箭头放大下移）；
+  // 桌面/横屏为 null，走下面这份默认值，画面不变
+  const HINT_DEFAULT = { pre: 1.5, y: 26, half: 9 };
   let _hintColor = '';
   function hintColor() {
     if (!_hintColor) {
@@ -98,6 +100,7 @@ window.Game = window.Game || { state: null };
     return _hintColor;
   }
   function drawSpawnHints(ctx, t, notes, speed) {
+    const HINT = Game.render.HINT || HINT_DEFAULT;
     const visibleAt = (Game.render.JUDGE_Y + 40) / speed; // 距落线多少秒时瓦片开始进入屏幕
     const c = hintColor();
     ctx.save();

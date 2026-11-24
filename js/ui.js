@@ -95,6 +95,19 @@ Game.ui = {
 
     this.refreshBest();
     this.applySettings(); // 开机读取已保存的音效/BGM 设置
+
+    // 旋屏/窗口尺寸变化时重算舞台（游戏页可见才需要处理，防抖避免连续 resize 抖动）
+    let layoutTimer = 0;
+    const relayout = () => {
+      clearTimeout(layoutTimer);
+      layoutTimer = setTimeout(() => {
+        if (!document.getElementById('screen-game').classList.contains('hidden')) {
+          this.applyStageLayout();
+        }
+      }, 120);
+    };
+    window.addEventListener('resize', relayout);
+    window.addEventListener('orientationchange', relayout);
   },
 
   // 游戏说明弹层开关（切页时顺手关闭，防止残留）
@@ -130,6 +143,42 @@ Game.ui = {
     this.showHelp(false);                     // 切页顺手关说明弹层，防止残留
     if (name === 'menu' || name === 'levels') this.refreshBest();
     if (name === 'wiki') this.renderWiki(this._wikiTab || 'all');
+    if (name === 'game') this.applyStageLayout(); // 页面已可见，才能量到舞台尺寸
+  },
+
+  // 竖屏全屏舞台（丙 2026-11-24）：按舞台实际 CSS 尺寸动态拉长画布的"逻辑高度"。
+  // 宽保持 960（谱面 x=120~840 不用动），H = W * 舞台高/舞台宽，比例一致不拉伸变形；
+  // 判定线、桶区随 H 下移，四桶均分整个宽度，瓦片与桶同步放大。
+  // 绘制层、input.js、effects.js、judge.js 都动态读 Game.render 的 W/H/BIN/JUDGE_Y，
+  // 所以这里只改常量 + backing store 尺寸，节奏与判定逻辑零改动。
+  applyStageLayout() {
+    const cv = Game.canvas;
+    if (!cv) return;
+    const portrait = window.matchMedia &&
+      window.matchMedia('(max-width: 640px) and (orientation: portrait)').matches;
+    const W = 960;
+    let H = 640, JUDGE_Y = 500, TILE = 82, HINT = null;
+    let BIN = { y: 522, w: 190, h: 110, gap: 16, pad: 56 };
+
+    if (portrait) {
+      const r = cv.parentElement.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) {
+        H = Math.max(1100, Math.min(2600, Math.round(W * r.height / r.width)));
+        const binH = Math.min(Math.round(H * 0.15), 300);  // 桶区占底部 15%
+        const pad = 12, gap = 8;
+        const bw = (W - 2 * pad - 3 * gap) / 4;             // 四桶均分宽度
+        const binY = H - binH - Math.round(H * 0.012);
+        JUDGE_Y = binY - Math.round(H * 0.02);
+        BIN = { y: binY, w: bw, h: binH, gap, pad };
+        TILE = 132;                                         // 瓦片放大约 1.6 倍
+        HINT = { pre: 1.5, y: Math.round(H * 0.025), half: 22 };
+      }
+    }
+
+    Object.assign(Game.render, { W, H, JUDGE_Y, BIN, TILE, HINT });
+    const DPR = Math.min(window.devicePixelRatio || 1, 2);
+    const bw = W * DPR, bh = H * DPR;
+    if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
   },
 
   // 开局：切到 game 页，#hud-level = level.name，清空 HUD

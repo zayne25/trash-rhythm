@@ -133,7 +133,7 @@ Game.render = {
   //    图标未加载完成时回退为纯名称兜底。
   function drawNotes(ctx, t, speed) {
     const R = Game.render;
-    const TW = 82, TH = 82;
+    const TW = R.TILE || 82, TH = TW; // 竖屏由 Game.ui.applyStageLayout 放大（桌面仍 82）
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     for (const n of Game.state.notes || []) {
@@ -172,13 +172,16 @@ Game.render = {
       if (!im) {
         // 兜底：图标尚未加载完成时显示名称
         ctx.fillStyle = palette.tileText;
-        ctx.font = '17px ' + FONT;
+        ctx.font = Math.round(17 * TW / 82) + 'px ' + FONT;
         ctx.fillText(n.trash.name, n.x, y);
       }
     }
   }
 
   // ⑤ 四个分类桶：按参考图还原街边分类垃圾桶（收口桶身/圆顶盖提手/白色字与标识/小物件插画），按下 130ms 内提亮
+  //    竖屏适配（丙 2026-11-24）：整桶改在 190×110 的"设计坐标系"里绘制，再按 binRect
+  //    的 w/h 做一次 ctx.scale —— 桌面 w=190/h=110 时缩放比为 1，画面逐像素不变；
+  //    竖屏 applyStageLayout 把 binRect 改成均分宽度、更高的桶区，桶与字自动等比放大。
   function drawBins(ctx, st) {
     const R = Game.render;
     const now = performance.now(); // 仅用于按下高亮的视觉反馈，判定时间仍走 audio.getTime()
@@ -188,22 +191,25 @@ Game.render = {
       const r = R.binRect(i);
       const color = R.BIN_COLORS[i];
       const pressed = st.pressedBin === i && st.pressedAt != null && now - st.pressedAt < 130;
-      const cx = r.x + r.w / 2;
+      ctx.save();
+      ctx.translate(r.x, r.y);
+      ctx.scale(r.w / 190, r.h / 110);
+      const cx = 95, BH = 110;                 // 局部设计坐标系：桶框 190×110
       // 参考图是竖长的环卫桶：桶身窄于命中框、几乎直筒，盖子三层且盖沿最宽
       const wTop = 112, wBot = 100;
-      const bodyTop = r.y + 30, bodyBottom = r.y + r.h;
+      const bodyTop = 30, bodyBottom = BH;
 
       // 盖子三层（自上而下：中央凸台 → 盖板 → 最宽的盖沿横条）
-      roundRect(ctx, cx - 32, r.y, 64, 12, 5);            // 凸台
+      roundRect(ctx, cx - 32, 0, 64, 12, 5);            // 凸台
       ctx.fillStyle = shade(color, 0.60);
       ctx.fill();
-      roundRect(ctx, cx - (wTop + 12) / 2, r.y + 5, wTop + 12, 14, 5); // 盖板
+      roundRect(ctx, cx - (wTop + 12) / 2, 5, wTop + 12, 14, 5); // 盖板
       ctx.fillStyle = shade(color, 0.74);
       ctx.fill();
-      roundRect(ctx, cx - (wTop + 12) / 2, r.y + 8, wTop + 12, 4, 2);  // 盖板顶面高光
+      roundRect(ctx, cx - (wTop + 12) / 2, 8, wTop + 12, 4, 2);  // 盖板顶面高光
       ctx.fillStyle = 'rgba(255,255,255,0.16)';
       ctx.fill();
-      roundRect(ctx, cx - (wTop + 34) / 2, r.y + 17, wTop + 34, 14, 7); // 盖沿（全桶最宽）
+      roundRect(ctx, cx - (wTop + 34) / 2, 17, wTop + 34, 14, 7); // 盖沿（全桶最宽）
       ctx.fillStyle = shade(color, 0.66);
       ctx.fill();
 
@@ -231,10 +237,10 @@ Game.render = {
       ctx.save();
       canBodyPath(ctx, cx, bodyTop, wTop, wBot, bodyBottom, 14);
       ctx.clip();
-      roundRect(ctx, cx - 44, bodyTop + 8, 12, r.h - 46, 6);
+      roundRect(ctx, cx - 44, bodyTop + 8, 12, BH - 46, 6);
       ctx.fillStyle = 'rgba(255,255,255,0.12)';
       ctx.fill();
-      roundRect(ctx, cx + 32, bodyTop + 8, 12, r.h - 46, 6);
+      roundRect(ctx, cx + 32, bodyTop + 8, 12, BH - 46, 6);
       ctx.fillStyle = 'rgba(0,0,0,0.07)';
       ctx.fill();
       ctx.restore();
@@ -243,16 +249,16 @@ Game.render = {
       ctx.fillStyle = palette.binText;
       ctx.font = 'bold 14px ' + FONT;
       if (i === 0) {
-        ctx.fillText(R.BIN_NAMES[i], cx, r.y + 52);
-        drawBinEmblem(ctx, i, cx, r.y + 74);
+        ctx.fillText(R.BIN_NAMES[i], cx, 52);
+        drawBinEmblem(ctx, i, cx, 74);
       } else {
-        drawBinEmblem(ctx, i, cx, r.y + 52);
-        ctx.fillText(R.BIN_NAMES[i], cx, r.y + 74);
+        drawBinEmblem(ctx, i, cx, 52);
+        ctx.fillText(R.BIN_NAMES[i], cx, 74);
       }
-      drawBinItems(ctx, i, cx, r.y + 97);
+      drawBinItems(ctx, i, cx, 97);
 
       // 键位角标：桶右侧分类色圆片 + 白字（位置仍在 binRect 内）
-      const kx = r.x + r.w - 16, ky = r.y + 14;
+      const kx = 190 - 16, ky = 14;
       ctx.beginPath();
       ctx.arc(kx, ky, 10, 0, Math.PI * 2);
       ctx.fillStyle = color;
@@ -271,10 +277,11 @@ Game.render = {
         ctx.strokeStyle = color;
         ctx.lineWidth = 3;
         ctx.stroke();
-        roundRect(ctx, cx - wTop / 2 - 7, r.y + 7, wTop + 14, 15, 7);
+        roundRect(ctx, cx - wTop / 2 - 7, 7, wTop + 14, 15, 7);
         ctx.fillStyle = 'rgba(255,255,255,0.24)';
         ctx.fill();
       }
+      ctx.restore();
     }
   }
 

@@ -756,6 +756,47 @@
   注意：公网 GitHub Pages 上仍是 `v3-20261124b`，本次改动需重新上传
   `index.html` 与 `css/base.css`（token 已撤销，网页端 Upload files 或新 token 推送）。
 
+### 11月24日 · 竖屏全屏纵向舞台（用户："整体拉长，垃圾桶均匀占据底部界面，
+### 垃圾从标题下方下落，整体放大"）
+
+- 提示词：附手机竖屏实拍——上一版仍是"居中 3:2 小横条"（canvas 368×245），
+  上下大片空白、四个桶挤在底部一条窄带里，READY 居中，垃圾下落区太短。
+  要求：舞台整体拉长占满屏幕、垃圾桶均匀铺满底部、垃圾从"垃圾分类大作战"
+  （浏览器标题栏）下方就开始下落、所有元素整体放大。
+- AI 输出的问题：
+  ① 只调 CSS 不可能达成——`render.js` 把 W=960/H=640/JUDGE_Y=500/BIN 当冻结常量，
+  竖屏等比缩放只会得到一个更矮的横条；非等比 CSS 拉伸则会把图标/文字压扁；
+  ② 缩 W 来放大元素会让 `chart.js` 的音符 x（写死 120~840）溢出画布；
+  ③ 桶绘制 `drawBins` 里 wTop=112/wBot=100/文字 y+52/74/97 全是硬编码，
+  只改 `binRect` 的 w/h 会出现"命中框变大、桶图形不变、文字挤在左上角"；
+  ④ main.js 在加载时一次性设 `cv.width/height = W*DPR`，没有 resize 处理，
+  拉长逻辑高度后 backing store 不跟着改会被浏览器二次缩放导致模糊。
+- 我的修改（用户直接要求布局改造，本次经契约同步动了乙的 `render.js` 布局参数与
+  组长的 `main.js` 出生箭头参数，**判定/节奏/谱面逻辑一行未改**）：
+  ① `ui.js` 新增 `applyStageLayout()`：竖屏时读舞台实际 CSS 尺寸，令
+  `H = 960 * cssH/cssW`（实测 1920，比例 0.500 与 CSS 完全一致、零拉伸变形）；
+  桶区 `h = min(H*0.15, 300)`、`pad=12/gap=8/w=(960-2*12-3*8)/4=228` 四桶均分，
+  `JUDGE_Y` 随桶区下移，瓦片 `TILE=132`、出生箭头 `HINT` 放大下移；
+  同时重设 `cv.width/height = W*DPR, H*DPR`。桌面/横屏恢复 960×640 全套默认值；
+  切到 game 页、resize/orientationchange（防抖 120ms）时自动重算；
+  ② `render.js`：`TILE` 参数化；`drawBins` 改为在 190×110 局部设计坐标系绘制后
+  `ctx.translate(r.x,r.y); ctx.scale(r.w/190, r.h/110)`——桌面缩放比 1:1，
+  画面逐像素不变，竖屏桶/字/角标自动等比放大；`base_tree` 等无关逻辑未动；
+  ③ `main.js`：出生箭头参数改为每帧读 `Game.render.HINT || HINT_DEFAULT`，
+  桌面 visibleAt 公式保持 `(JUDGE_Y+40)/speed` 原样；
+  ④ CSS 竖屏媒体查询把 `#screen-game` 改 `position:fixed; inset:0; height:100dvh`
+  的 flex 纵向布局：HUD 置顶、`.stage-wrap` `flex:1` 吃满剩余高度、
+  canvas `width/height:100%`，去掉卡片内边距/圆角/阴影与横屏提示；
+  ⑤ `?v=` 升到 30、buildTag `v3-20261124d`。
+  验证：CDP 触屏模拟 390×844——CSS 舞台 390×780（top 64 → bottom 844，贴底），
+  逻辑 960×1920、比例均 0.500；桶 x=[12,248,484,720] 宽 228 均匀铺满、
+  桶高 288（CSS 117px）、瓦片 132（CSS 54px）、判定线 1571；
+  **模拟 pointerdown 点按四桶中心，pressedBin 依次 0/1/2/3 全部命中**，
+  证明 `input.js` 的 `getBoundingClientRect` 换算随动态 H 正确；
+  桌面 1280×800 重开恢复 960×640/82/500/默认 BIN、canvas 890×593 比例 1.5、
+  桶绘制截图确认未变形；横屏 844×390 恢复 441×294 无溢出；
+  控制台仅 favicon 404，lint 无错误。离线包与单文件版已重新生成。
+
 ## 阶段五：部署与文档（待填）
 
 （待填）

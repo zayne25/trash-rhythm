@@ -954,33 +954,32 @@ kbd {
    所以这里只动 CSS 尺寸，不影响判定与触屏命中。 */
 .rotate-tip { display: none; }
 
-/* 竖屏：舞台全宽顶对齐、HUD 两行、READY 自适应字号、加大触屏点击目标 */
+/* 竖屏：全屏纵向舞台（用户要求"整体拉长"）——游戏页 fixed 铺满视口，
+   HUD 置顶，画布 flex:1 吃到屏幕底部；逻辑高度由 ui.applyStageLayout 按比例拉长，
+   垃圾从标题栏/HUD 正下方开始下落，四桶均匀铺满底部。 */
 @media (max-width: 640px) and (orientation: portrait) {
-  /* body 已是 flex 垂直居中，这里保持居中：上下留白均分，分类桶落在屏幕中下部便于点按 */
-  #screen-game { padding: 10px 6px 16px; }
-  .hud { flex-wrap: wrap; gap: 6px 8px; padding: 4px 2px 8px; }
+  #screen-game {
+    position: fixed; inset: 0; z-index: 10;
+    width: 100%; max-width: none; height: 100dvh; padding: 0;
+    display: flex; flex-direction: column;
+  }
+  .hud { flex: 0 0 auto; flex-wrap: wrap; gap: 6px 8px; padding: 8px 10px; }
   .hud-chip { padding: 3px 10px; font-size: 12px; }
   #hud-score { font-size: 22px; }
   #hud-combo { font-size: 13px; }
   #hud-lives { font-size: 15px; letter-spacing: 1px; }
   .hud-btn { width: 38px; height: 38px; font-size: 16px; }
-  .hud-progress-track { margin: 0 2px 8px; }
-  .stage-wrap { padding: 4px; border-radius: 12px; }
-  #stage { border-radius: 8px; }
-  .ready-go { font-size: clamp(26px, 9vw, 56px); letter-spacing: 2px; }
-  .input-hint { font-size: 11px; padding: 5px 10px; max-width: 92%; }
-  .popup { font-size: 12px; padding: 8px 12px; max-width: 84%; }
-}
-
-/* 仅触屏竖屏提示横屏（电脑窄窗口不显示） */
-@media (pointer: coarse) and (max-width: 640px) and (orientation: portrait) {
-  .rotate-tip {
-    display: block;
-    margin: 12px 0 0;
-    text-align: center;
-    font-size: 12px;
-    color: var(--muted);
+  .hud-progress-track { flex: 0 0 auto; margin: 0 10px 4px; }
+  .stage-wrap {
+    flex: 1 1 auto; min-height: 0;
+    padding: 0; border: 0; border-radius: 0; box-shadow: none;
+    background: var(--bg-2);
   }
+  #stage { width: 100%; height: 100%; border-radius: 0; }
+  .ready-go { inset: 0; font-size: clamp(28px, 10vw, 56px); letter-spacing: 2px; }
+  .input-hint { top: 8px; font-size: 11px; padding: 5px 10px; max-width: 92%; }
+  .popup { font-size: 12px; padding: 8px 12px; max-width: 84%; bottom: 20%; }
+  .rotate-tip { display: none !important; }  /* 竖屏已优化，不再提示横屏 */
 }
 
 /* 横屏：按视口高度撑满画布（width:auto + max-height 让 canvas 等比缩放） */
