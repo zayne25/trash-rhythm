@@ -14,7 +14,8 @@ Game.TRASH = [
   { id: 't04', name: '旧报纸', bin: 0, diff: 1, icon: 'assets/trash/t04.png', tip: '报纸脱墨后可再造纸，属于可回收物。' },
   { id: 't05', name: '玻璃瓶', bin: 0, diff: 1, icon: 'assets/trash/t05.png', tip: '玻璃可以无限次熔融再造而不降质，属于可回收物。' },
   { id: 't06', name: '旧衣服', bin: 0, diff: 2, icon: 'assets/trash/t06.png', tip: '纺织物可再生成再生纤维或工业抹布，属于可回收物。' },
-  { id: 't07', name: '牛奶盒', bin: 0, diff: 2, icon: 'assets/trash/t07.png', tip: '洗净压扁的利乐包装可分离出纸、铝、塑三层再生利用，属于可回收物。' },
+  // ★组长调整 2026-11-24：牛奶盒（可回收、生活极常见）diff:2→1，第 1 关池补足 20 种（= count，全池覆盖）
+  { id: 't07', name: '牛奶盒', bin: 0, diff: 1, icon: 'assets/trash/t07.png', tip: '洗净压扁的利乐包装可分离出纸、铝、塑三层再生利用，属于可回收物。' },
   { id: 't08', name: '金属罐头', bin: 0, diff: 1, icon: 'assets/trash/t08.png', tip: '铁罐可磁选回收再炼钢，属于可回收物。' },
   { id: 't09', name: '旧手机', bin: 0, diff: 2, icon: 'assets/trash/t09.png', tip: '电子产品含铜、金等金属，应交回收渠道拆解再生，属于可回收物。' },
   { id: 't10', name: '旧书', bin: 0, diff: 1, icon: 'assets/trash/t10.png', tip: '书本纸张可回收再造纸，属于可回收物；干净的优先捐赠或二手转让。' },
@@ -38,7 +39,9 @@ Game.TRASH = [
   { id: 't24', name: '苹果核', bin: 2, diff: 1, icon: 'assets/trash/t24.png', tip: '果核果皮属于易腐有机物，可堆肥，属于厨余垃圾。' },
   { id: 't25', name: '菜叶', bin: 2, diff: 1, icon: 'assets/trash/t25.png', tip: '蔬菜叶含水量高、易降解，属于厨余垃圾。' },
   { id: 't26', name: '蛋壳', bin: 2, diff: 1, icon: 'assets/trash/t26.png', tip: '蛋壳主要成分是碳酸钙，可堆肥还田，属于厨余垃圾。' },
-  { id: 't27', name: '茶叶渣', bin: 2, diff: 2, icon: 'assets/trash/t27.png', tip: '茶叶渣是植物残体、易腐，属于厨余垃圾。' },
+  // ★组长调整 2026-11-24（用户要求"一局内垃圾不重复"）：第 1 关垃圾池需 ≥ count(20)，
+  // 茶叶渣（厨余、极易识别）从 diff:2 降到 diff:1，使 diff≤1 池从 19 → 20，正好全池覆盖。
+  { id: 't27', name: '茶叶渣', bin: 2, diff: 1, icon: 'assets/trash/t27.png', tip: '茶叶渣是植物残体、易腐，属于厨余垃圾。' },
   { id: 't28', name: '鱼骨', bin: 2, diff: 2, icon: 'assets/trash/t28.png', tip: '细小鱼骨易被粉碎降解，属于厨余垃圾。' },
   { id: 't29', name: '虾壳', bin: 2, diff: 2, icon: 'assets/trash/t29.png', tip: '虾壳属于易腐的生物质，可堆肥，属于厨余垃圾。' },
   { id: 't30', name: '过期面包', bin: 2, diff: 1, icon: 'assets/trash/t30.png', tip: '面包是易腐食物，属于厨余垃圾，拆掉包装袋单独投放。' },

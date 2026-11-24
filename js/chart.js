@@ -9,14 +9,27 @@ Game.chart = (function () {
   const X_SPAN = 720;        // 120 ~ 840
 
   // 从垃圾池随机取一条（池为空时按关卡难度过滤 Game.TRASH 兜底，避免崩）
-  function pickTrash(pool, level) {
+  // ★组长调整 2026-11-24（用户要求"一局内下落的垃圾应该不重复"）：原实现每颗
+  // Math.random() 独立抽取，同一垃圾一局内可能反复出现——既削弱知识点覆盖面，
+  // 也让玩家对着重复图标刷记忆。改为"洗牌袋"抽样：对池做 Fisher-Yates 洗牌后
+  // 逐颗弹出，池 ≥ count 时一局内严格不重复（L1 20=20 恰好全池覆盖一次）；
+  // 池意外耗尽时重洗兜底，不会崩。甲确认时请知悉（core 模块文件）。
+  function buildPool(pool, level) {
     let list = pool;
     if (!list || !list.length) {
       list = Game.TRASH.filter(function (item) {
         return item.diff <= level.diff;
       });
     }
-    return list[Math.floor(Math.random() * list.length)];
+    return list;
+  }
+
+  function shuffle(list) {
+    for (let i = list.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = list[i]; list[i] = list[j]; list[j] = t;
+    }
+    return list;
   }
 
   return {
@@ -67,8 +80,12 @@ Game.chart = (function () {
         }
       }
 
+      // 不重复洗牌袋：弹出池中垃圾，弹尽重洗（正常配置下池 ≥ count 不会触发）
+      let bag = shuffle(buildPool(pool, level).slice());
+
       for (const offset of picked) {
-        const trash = pickTrash(pool, level);
+        if (!bag.length) bag = shuffle(buildPool(pool, level).slice());
+        const trash = bag.pop();
         notes.push({
           id: notes.length,
           offset: offset,
