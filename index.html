@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>垃圾分类大作战</title>
+<link rel="stylesheet" href="css/base.css?v=28">
+</head>
+<body>
+
+  <!-- 首页（主菜单）：标题区 + 四大入口 + 底部键位提示 -->
+  <div id="screen-menu" class="screen">
+    <div class="menu-bg" aria-hidden="true">
+      <span class="orb orb-0"></span>
+      <span class="orb orb-1"></span>
+      <span class="orb orb-2"></span>
+      <span class="orb orb-3"></span>
+    </div>
+
+    <header class="menu-head">
+      <h1 class="logo">垃圾分类大作战</h1>
+      <p class="logo-sub">TRASH · SORT · RHYTHM</p>
+      <p class="slogan">跟着节拍，把垃圾投进正确的桶！</p>
+    </header>
+
+    <div class="bin-strip" aria-hidden="true">
+      <span class="bin-chip bc-0"><i></i>可回收物</span>
+      <span class="bin-chip bc-1"><i></i>有害垃圾</span>
+      <span class="bin-chip bc-2"><i></i>厨余垃圾</span>
+      <span class="bin-chip bc-3"><i></i>其他垃圾</span>
+    </div>
+
+    <!-- 四个居中大按钮（丙 2026-11-23）：首页只留入口，"开始游戏"进独立关卡选择页 -->
+    <div class="home-menu">
+      <button id="home-start" class="home-btn primary">🎮 开始游戏</button>
+      <button id="home-help" class="home-btn">📖 游戏说明</button>
+      <button id="home-wiki" class="home-btn">📚 知识库</button>
+      <button id="home-settings" class="home-btn">⚙️ 设置</button>
+    </div>
+
+    <p id="storage-note" class="storage-note hidden">⚠ 当前环境不支持本地存储，最高分仅在本次打开期间有效</p>
+
+    <p class="key-tips">
+      <span class="tips-kb"><kbd class="k-0">D</kbd> 可回收｜<kbd class="k-1">F</kbd> 有害｜<kbd class="k-2">J</kbd> 厨余｜<kbd class="k-3">K</kbd> 其他</span>
+      <span class="tips-touch">👆 点按画面下方的分类桶即可分拣</span>
+    </p>
+    <p class="credit">使用 CodeBuddy 协作开发 · 三人小组</p>
+  </div>
+
+  <!-- 关卡选择页（开始游戏跳转至此） -->
+  <div id="screen-levels" class="screen hidden">
+    <div class="menu-bg" aria-hidden="true">
+      <span class="orb orb-0"></span>
+      <span class="orb orb-2"></span>
+    </div>
+    <header class="page-head">
+      <button class="btn-back" data-back="menu">← 返回首页</button>
+      <h2 class="page-title">选择关卡</h2>
+    </header>
+
+    <div class="level-list">
+      <button class="level-card" data-level="0">
+        <span class="lv-no">01</span>
+        <span class="lv-main">
+          <span class="lv-name">环保新人</span>
+          <span class="lv-desc">慢速节拍 · 认识四分类</span>
+        </span>
+        <span class="lv-right">
+          <span class="lv-dots" aria-hidden="true"><i class="on"></i><i></i><i></i></span>
+          <span class="lv-best" data-best="0">最高分 --</span>
+        </span>
+      </button>
+      <button class="level-card" data-level="1">
+        <span class="lv-no">02</span>
+        <span class="lv-main">
+          <span class="lv-name">分类能手</span>
+          <span class="lv-desc">节奏加快 · 半拍音符</span>
+        </span>
+        <span class="lv-right">
+          <span class="lv-dots" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></span>
+          <span class="lv-best" data-best="1">最高分 --</span>
+        </span>
+      </button>
+      <button class="level-card" data-level="2">
+        <span class="lv-no">03</span>
+        <span class="lv-main">
+          <span class="lv-name">环保大师</span>
+          <span class="lv-desc">高速高密度 · 手感考验</span>
+        </span>
+        <span class="lv-right">
+          <span class="lv-dots" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i></span>
+          <span class="lv-best" data-best="2">最高分 --</span>
+        </span>
+      </button>
+    </div>
+
+    <div class="help">
+      <p>垃圾落到判定线那一刻按对应的桶：越准分越高；按错桶会扣一条命，答案收进结算页"答错回顾"。</p>
+    </div>
+  </div>
+
+  <!-- 知识库页：全部垃圾 / 我的收藏 两个标签，卡片样式与结算页错题卡片一致 -->
+  <div id="screen-wiki" class="screen hidden">
+    <header class="page-head">
+      <button class="btn-back" data-back="menu">← 返回首页</button>
+      <h2 class="page-title">垃圾知识库</h2>
+    </header>
+    <div class="wiki-tabs">
+      <button class="wiki-tab active" data-tab="all">全部垃圾</button>
+      <button class="wiki-tab" data-tab="fav">我的收藏</button>
+    </div>
+    <p id="wiki-count" class="wiki-count"></p>
+    <div id="wiki-grid" class="wiki-grid"></div>
+  </div>
+
+  <!-- 游戏说明弹层（主入口，丙 2026-11-23）：数值与 judge.js 冻结常量一致；
+       遮罩为半透明黑色、面板居中（首页"游戏说明"按钮打开） -->
+  <div id="help-overlay" class="overlay hidden">
+    <div class="panel help-panel">
+      <button id="btn-help-close" class="modal-close" aria-label="关闭">×</button>
+      <h2>📖 游戏说明</h2>
+
+      <h3>🎮 怎么玩</h3>
+      <p>垃圾会从画面上方落下，<b>在它到达判定线之前</b>，把它投进正确的分类桶：</p>
+      <p>
+        <b>键盘</b>：<kbd class="k-0">D</kbd> 可回收 · <kbd class="k-1">F</kbd> 有害 ·
+        <kbd class="k-2">J</kbd> 厨余 · <kbd class="k-3">K</kbd> 其他 ·
+        <kbd>Esc</kbd>/<kbd>P</kbd> 暂停
+      </p>
+      <p><b>鼠标 / 触屏</b>：直接点击画面下方的分类桶。</p>
+      <p>你有 <b>3 条生命</b>：投错桶或没来得及投（漏接）都会扣 1 条；生命扣光，本局结束。</p>
+
+      <h3>🏆 怎么得分</h3>
+      <p>每一颗垃圾都有一个"最完美的投放时刻"，<b>按键时机越准，得分越高</b>：</p>
+      <table class="score-table">
+        <tr><th>判定</th><th>时机</th><th>得分</th></tr>
+        <tr><td>🌟 完美</td><td>卡点投放</td><td><b>100 分</b></td></tr>
+        <tr><td>👍 良好</td><td>稍早 / 稍晚一点点</td><td><b>60 分</b></td></tr>
+        <tr><td>🙂 凑合</td><td>明显偏早 / 偏晚，但算对</td><td><b>30 分</b></td></tr>
+        <tr><td>❌ 投错 / 漏接</td><td>分类错了或没投</td><td>0 分，连击清零，扣 1 命</td></tr>
+      </table>
+      <p>
+        <b>连击奖励</b>：连续投放正确不失误——连击 <b>≥ 10</b> 时所有得分 <b>× 1.2</b>，
+        连击 <b>≥ 25</b> 时 <b>× 1.5</b>；一旦投错或漏接，<b>连击立刻清零</b>。
+      </p>
+      <p class="score-precise">精确判定窗口：完美 ≤55ms · 良好 ≤115ms · 凑合 ≤180ms</p>
+
+      <h3>💡 高分秘诀</h3>
+      <p>按错桶 = 0 分还掉命，血亏。宁可稳一点拿"良好"60 分保住连击，也别为了抢"完美"按错分类。</p>
+
+      <h3>🏅 通关评级</h3>
+      <p>按<b>正确率</b>结算：<b>S</b>（≥90%）· <b>A</b>（≥75%）· <b>B</b>（≥60%）· <b>C</b>（未达标）</p>
+
+      <h3>♻️ 四类垃圾</h3>
+      <div class="intro-grid">
+        <div class="intro-card intro-0"><b>可回收物</b><p>废纸、塑料、玻璃、金属、织物，如易拉罐、旧报纸、玻璃瓶、旧衣服。</p></div>
+        <div class="intro-card intro-1"><b>有害垃圾</b><p>含重金属或有毒成分：废电池、过期药品、荧光灯管、水银温度计、废油漆桶。</p></div>
+        <div class="intro-card intro-2"><b>厨余垃圾</b><p>易腐生物质，可堆肥产沼：剩饭剩菜、果皮菜叶、蛋壳、茶叶渣、鱼骨虾壳。</p></div>
+        <div class="intro-card intro-3"><b>其他垃圾</b><p>难回收的废弃物：用过的纸巾、烟蒂、陶瓷碎片、大棒骨、猫砂、尿不湿。</p></div>
+      </div>
+
+      <div class="result-btns">
+        <button id="btn-help-close2">我知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置弹窗（丙 2026-11-23）：BGM / 音效开关、音量滑块、重置数据（二次确认），遮罩半透明黑、面板居中 -->
+  <div id="modal-settings" class="modal-mask hidden">
+    <div class="modal">
+      <button class="modal-close" data-close="modal-settings" aria-label="关闭">×</button>
+      <h2>⚙️ 设置</h2>
+      <div class="modal-body">
+        <div class="set-row">
+          <span>背景音乐（BGM）</span>
+          <label class="switch"><input type="checkbox" id="set-bgm" checked><i></i></label>
+        </div>
+        <div class="set-row">
+          <span>游戏音效</span>
+          <label class="switch"><input type="checkbox" id="set-sfx" checked><i></i></label>
+        </div>
+        <div class="set-row">
+          <span>音量</span>
+          <input type="range" id="set-volume" min="0" max="100" step="5" value="85">
+          <b id="set-volume-val">85%</b>
+        </div>
+        <div id="reset-zone">
+          <button id="btn-reset" class="btn-danger">重置数据</button>
+          <div id="reset-confirm" class="reset-confirm hidden">
+            <span>⚠ 确定清空最高分与收藏？此操作不可恢复！</span>
+            <button id="btn-reset-yes" class="btn-danger">确认重置</button>
+            <button id="btn-reset-no" class="btn-plain">取消</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 游戏页 -->
+  <div id="screen-game" class="screen hidden">
+    <div class="hud">
+      <span id="hud-level" class="hud-chip">--</span>
+      <span id="hud-score">0</span>
+      <span id="hud-combo"></span>
+      <span id="hud-time" class="hud-chip">00:00</span>
+      <span id="hud-lives"></span>
+      <button id="btn-pause" class="hud-btn" title="暂停（Esc/P）" aria-label="暂停">⏸</button>
+    </div>
+    <div class="hud-progress-track"><div id="hud-progress"></div></div>
+    <div class="stage-wrap">
+      <canvas id="stage" width="960" height="640" tabindex="0"></canvas>
+      <p id="input-hint" class="input-hint hidden">⌨️ 键盘无响应？点击一下画面任意位置激活键盘</p>
+      <div id="ready-go" class="ready-go hidden"></div>
+      <div id="popup" class="popup hidden"></div>
+      <div id="pause-overlay" class="overlay hidden">
+        <div class="panel">
+          <h2>已暂停</h2>
+          <button id="btn-resume">继续</button>
+          <button id="btn-restart" class="btn-ghost">重新开始</button>
+          <button id="btn-quit" class="btn-ghost">返回菜单</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 结算页 -->
+  <div id="screen-result" class="screen hidden">
+    <div class="panel result-panel">
+      <h2 id="result-title">结算</h2>
+      <!-- 评级圆形徽章：外环与准确率环同一套配色/比例/动画，视觉呼应 -->
+      <div class="grade-badge">
+        <svg id="grade-ring" class="grade-ring" viewBox="0 0 96 96" aria-hidden="true">
+          <circle class="grade-ring-bg" cx="48" cy="48" r="42" fill="none" stroke="#dfeafa" stroke-width="5"/>
+          <circle id="grade-ring-fg" class="grade-ring-fg" cx="48" cy="48" r="42"
+                  fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round"
+                  stroke-dasharray="263.89" stroke-dashoffset="263.89"/>
+        </svg>
+        <span id="result-grade" class="grade">S</span>
+      </div>
+      <!-- 判定分布条：本局 对/错/漏 一屏可见（数据来自 Game.state.counts） -->
+      <div id="verdict" class="verdict hidden">
+        <div class="verdict-bar">
+          <i id="v-ok" class="v-ok"></i><i id="v-wrong" class="v-wrong"></i><i id="v-miss" class="v-miss"></i>
+        </div>
+        <p id="verdict-legend" class="verdict-legend"></p>
+      </div>
+      <div class="result-rows">
+        <div><span>得分</span><b id="result-score">0</b></div>
+        <div>
+          <span>最大连击</span>
+          <span class="combo-wrap">
+            <b id="result-combo">0</b><span id="combo-stars" class="combo-stars hidden"></span>
+          </span>
+        </div>
+        <div>
+          <span>准确率</span>
+          <span class="acc-wrap">
+            <b id="result-acc">0%</b>
+            <!-- fill/stroke 全部内联：即使 base.css 被缓存成旧版，也不会渲染成实心黑圆 -->
+            <svg id="acc-ring" class="acc-ring" width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
+              <circle class="acc-ring-bg" cx="24" cy="24" r="20" fill="none" stroke="#dfeafa" stroke-width="5"/>
+              <circle id="acc-ring-fg" class="acc-ring-fg" cx="24" cy="24" r="20"
+                      fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round"
+                      stroke-dasharray="125.66" stroke-dashoffset="125.66"/>
+            </svg>
+          </span>
+        </div>
+        <div><span>本局用时</span><b id="result-time">00:00</b></div>
+        <div><span>本关最高分</span><b id="result-best">0</b></div>
+      </div>
+      <!-- 得分对比条：本局得分相对历史最高分的位置，破纪录时填充变金色 -->
+      <div class="score-compare">
+        <div class="sc-bar"><i id="sc-fill"></i></div>
+        <span id="sc-label"></span>
+      </div>
+      <p id="result-record" class="record hidden">🎉 新纪录！</p>
+      <div id="result-mistakes" class="mistakes hidden"></div>
+      <div class="result-btns">
+        <button id="btn-retry">再来一局</button>
+        <button id="btn-back" class="btn-ghost">返回菜单</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 错误可视化（丙）：任何脚本报错直接红条显示在页面顶部，不用开 F12 也能截图定位 -->
+  <script>
+    (function () {
+      function show(msg) {
+        var d = document.getElementById('err-bar');
+        if (!d) {
+          d = document.createElement('div');
+          d.id = 'err-bar';
+          d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#dc2626;color:#fff;font:13px/1.7 Consolas,monospace;padding:10px 16px;white-space:pre-wrap;max-height:40vh;overflow:auto';
+          document.body.appendChild(d);
+        }
+        d.textContent += '⚠ ' + msg + '\n';
+      }
+      window.addEventListener('error', function (e) {
+        var f = (e.filename || '').split('/').pop();
+        show(e.message + (f ? '  @ ' + f + ':' + e.lineno : ''));
+      });
+      window.addEventListener('unhandledrejection', function (e) {
+        show('Promise: ' + (e.reason && e.reason.message ? e.reason.message : e.reason));
+      });
+      window.__buildTag = 'v3-20261124b';
+      console.log('[build] ' + window.__buildTag);
+    })();
+  </script>
+
+  <!-- 数据（丙）：用 JS 而非 JSON，保证双击 index.html（file://）也能加载 -->
+  <!-- ?v= 版本号用于强制刷新浏览器缓存，每次改动 JS 后把 v 加一 -->
+  <script src="data/trash.js?v=28"></script>
+  <script src="data/levels.js?v=28"></script>
+
+  <!-- 模块（加载顺序不可调整：storage → audio → chart → judge → fx → render → input → ui → main） -->
+  <script src="js/storage.js?v=28"></script>
+  <script src="js/audio.js?v=28"></script>
+  <script src="js/chart.js?v=28"></script>
+  <script src="js/judge.js?v=28"></script>
+  <script src="js/effects.js?v=28"></script>
+  <script src="js/render.js?v=28"></script>
+  <script src="js/input.js?v=28"></script>
+  <script src="js/ui.js?v=28"></script>
+  <script src="js/main.js?v=28"></script>
+</body>
+</html>
