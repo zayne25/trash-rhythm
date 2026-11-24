@@ -948,3 +948,55 @@ kbd {
   .wiki-grid { grid-template-columns: 1fr; }
   .page-title { font-size: 22px; }
 }
+
+/* ========== 手机游戏页布局适配（丙 2026-11-24） ==========
+   画布逻辑分辨率固定 960×640，input.js 已按 getBoundingClientRect 换算点按坐标，
+   所以这里只动 CSS 尺寸，不影响判定与触屏命中。 */
+.rotate-tip { display: none; }
+
+/* 竖屏：舞台全宽顶对齐、HUD 两行、READY 自适应字号、加大触屏点击目标 */
+@media (max-width: 640px) and (orientation: portrait) {
+  /* body 已是 flex 垂直居中，这里保持居中：上下留白均分，分类桶落在屏幕中下部便于点按 */
+  #screen-game { padding: 10px 6px 16px; }
+  .hud { flex-wrap: wrap; gap: 6px 8px; padding: 4px 2px 8px; }
+  .hud-chip { padding: 3px 10px; font-size: 12px; }
+  #hud-score { font-size: 22px; }
+  #hud-combo { font-size: 13px; }
+  #hud-lives { font-size: 15px; letter-spacing: 1px; }
+  .hud-btn { width: 38px; height: 38px; font-size: 16px; }
+  .hud-progress-track { margin: 0 2px 8px; }
+  .stage-wrap { padding: 4px; border-radius: 12px; }
+  #stage { border-radius: 8px; }
+  .ready-go { font-size: clamp(26px, 9vw, 56px); letter-spacing: 2px; }
+  .input-hint { font-size: 11px; padding: 5px 10px; max-width: 92%; }
+  .popup { font-size: 12px; padding: 8px 12px; max-width: 84%; }
+}
+
+/* 仅触屏竖屏提示横屏（电脑窄窗口不显示） */
+@media (pointer: coarse) and (max-width: 640px) and (orientation: portrait) {
+  .rotate-tip {
+    display: block;
+    margin: 12px 0 0;
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+  }
+}
+
+/* 横屏：按视口高度撑满画布（width:auto + max-height 让 canvas 等比缩放） */
+@media (orientation: landscape) and (max-height: 520px) {
+  #screen-game { padding: 6px 10px; }
+  .hud { gap: 6px; padding: 2px 4px 4px; }
+  .hud-chip { padding: 2px 8px; font-size: 11px; }
+  #hud-score { font-size: 18px; }
+  .hud-progress-track { height: 4px; margin: 0 4px 6px; }
+  .stage-wrap { padding: 4px; border-radius: 12px; }
+  #stage {
+    width: auto;
+    max-width: 100%;
+    max-height: calc(100dvh - 96px);
+    margin: 0 auto;
+  }
+  .ready-go { font-size: clamp(28px, 7vh, 60px); }
+  .rotate-tip { display: none !important; }
+}

@@ -697,6 +697,65 @@
   ④ 交付物清单加入"单文件分享版"，产物随离线包一并交付；`release/` 已在 gitignore，
   脚本与产物只留在本地，改动仅文档提交（`af34769`）。
 
+### 11月24日 · GitHub Pages 公网链接开通（"手机也能玩、发给别人玩"的最终方案）
+
+- 提示词："我有 GitHub 账号" → 提供 fine-grained token（Contents/Pages 读写）与用户名
+  zayne25 → 网页端按指引完成 Pages 开通 → "做完了"。
+- AI 输出的问题：
+  ① `git push` 直连 `github.com:443` 被**连接重置**（api.github.com 却可达）——常规推送
+  走不通；② 空仓库调用 Git Data API（blob/tree/commit）返回 **409 "Git Repository is
+  empty"**，必须先有至少一个提交；③ Contents API 首提交带 `branch: 'master'` 返回
+  **"Branch master not found"**——空仓库不能指定尚不存在的分支，只能提交到仓库默认分支
+  （该账号默认分支是 `main` 而非 master）；④ Pages 开通 API（POST /pages）返回
+  **403 "Resource not accessible by personal access token"**，token 已含 Pages 读写
+  仍不够，网页端手动开通即可。
+- 我的修改：
+  ① 改走 **Git Data API 上传**：69 个文件 → base64 blob → tree → commit → 更新
+  refs/heads/main，完全绕开 git 协议端口（临时代码 `_ghpush.js`，用完即删）；
+  ② 空仓库先用 Contents API 提交 `.gitignore` 激活，且分支名动态读
+  `default_branch`，不硬编码 master；③ Pages 开通改为指导用户网页端
+  Settings → Pages → Deploy from a branch → main → Save；
+  ④ 交付并实测：`https://zayne25.github.io/trash-rhythm/` HTTP 200、buildTag
+  v3-20261124b、开局 `scene=playing`、知识库 44 卡图标 **44/44 全部加载**
+  （前两次采样 25/40 张是网络延迟，非 404）、控制台仅 favicon 404；
+  ⑤ 部署方案标注 GitHub Pages 为公网主通道并写明更新流程（git push 或 API 上传），
+  启动说明第六章换成可用链接；Gitee 侧 `af34769`/`f04c894` 保持同步。
+  安全：临时脚本已删除；提醒用户在 GitHub 上 **Revoke 该 token**（完成任务后不再需要）。
+
+### 11月24日 · 游戏页手机布局适配（用户反馈"游戏版的界面布局跟手机不适配"）
+
+- 提示词："游戏版的界面布局跟手机不适配，怎么修改"。
+- AI 输出的问题：
+  ① 竖屏 390×844 实测：`.screen` 有 24px padding + `.stage-wrap` 10px padding，
+  canvas 只剩 **320×213**，画面小、分类桶点按目标小；② `.ready-go` 固定 84px
+  字号，缩到 320px 宽的画布上 "READY" 直接溢出舞台；③ HUD 五项挤一行、
+  暂停按钮只有 32px，触屏难按；④ 竖屏没有横屏引导，横屏（844×390）下
+  `#stage { width:100% }` 只按宽度缩放，浪费了整块屏幕高度；⑤ 首版让游戏页
+  `align-self:flex-start` 靠上，结果底部空出 500px 更显"没适配"。
+- 我的修改（只动丙名下 `index.html` / `css/base.css` / 文档）：
+  ① 追加三段媒体查询：竖屏（≤640px portrait）减 padding 到 10px 6px、
+  `.stage-wrap` 4px、HUD `flex-wrap` 与字号收敛、暂停按钮放大到 38px、
+  `.ready-go { font-size: clamp(26px, 9vw, 56px) }`、`.input-hint`/`.popup`
+  限宽缩小；② 横屏（landscape + max-height:520px）让 canvas 改为
+  `width:auto; max-height:calc(100dvh - 96px)`，按视口高度等比撑满，
+  HUD 与进度条同步压缩；③ 新增 `.rotate-tip`，仅在
+  `@media (pointer: coarse) and (max-width:640px) and (orientation:portrait)`
+  下显示「↻ 横屏游玩画面更大 · 点按画面下方分类桶分拣」，电脑窄窗口不打扰；
+  ④ 去掉 `align-self:flex-start`，保持 body flex 垂直居中，上下留白均分、
+  分类桶落在屏幕中下部便于点按；⑤ 画布逻辑分辨率仍为 960×640——
+  `input.js` 的 `toLogical` 用 `getBoundingClientRect()` 换算，CSS 缩放不影响
+  触屏命中，所以**不用改任何 JS 或乙/甲的文件**；⑥ `?v=` 升到 29、
+  buildTag 升到 `v3-20261124c`，离线包与单文件版重新生成。
+  验证：Edge + CDP `Emulation.setEmulatedMedia(pointer:coarse)` /
+  `setTouchEmulationEnabled` 真机模拟——竖屏 canvas 320→**368px** 宽、
+  stageTop 314 居中、READY 35.1px 不溢出、触屏提示正确切为
+  「👆 点按下方分类桶进行分拣」、rotate-tip 显示、零横向溢出；
+  横屏 canvas **441×294**（比例 1.500）撑满可用高度、无横纵溢出；
+  桌面 1280×800 回归 canvas 890×593、READY 84px / HUD 28px 全部保持原样；
+  控制台仅 favicon 404，lint 无错误。
+  注意：公网 GitHub Pages 上仍是 `v3-20261124b`，本次改动需重新上传
+  `index.html` 与 `css/base.css`（token 已撤销，网页端 Upload files 或新 token 推送）。
+
 ## 阶段五：部署与文档（待填）
 
 （待填）
