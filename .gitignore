@@ -1,0 +1,11 @@
+# 依赖与构建产物（本项目零构建，此条为预防）
+node_modules/
+dist/
+release/
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
+*.log
